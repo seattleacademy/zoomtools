@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>C2103</title>
+    <style>
+    .center {
+        width: 50%;
+        margin: auto;
+        display: block;
+        margin-bottom: 20px;
+        background: lightblue;
+    }
+
+    .student {
+        border-style: groove;
+        text-align: center;
+        width: 50%;
+        margin: auto;
+    }
+
+    .picked {
+        background: green;
+    }
+    </style>
+</head>
+
+<body translate="no">
+    <select id="mySelect" onchange="classChange()">
+        <option value="block6.JSON">Block 6
+        <option value="block1.JSON">Block 1
+        <option value="block3.JSON">Block 3
+        <option value="Volvo">Volvo
+    </select>
+    <button id="pickStudent" class='center'>
+        Pick Student
+    </button>
+    <div id="container">
+        ...
+    </div>
+    <script id="rendered-js">
+    console.clear();
+
+    let students = [];
+
+    function makeStudent(username, first, last, gradeLevel) {
+        const student = {};
+        student.username = username;
+        student.first = first;
+        student.last = last;
+        student.gradeLevel = gradeLevel;
+        student.clickcount = 0;
+        student.lasttime = Date.now();
+        student.picked = false;
+        return student;
+    }
+
+    students.push(makeStudent("brodybryant", "Brody", "Bryant", 9));
+    students.push(makeStudent("sophiacheuk", "Sofia", "Cheuk", 9));
+    students.push(makeStudent("natecounts", "Nate", "Counts", 9));
+    students.push(makeStudent("vinsoncurran", "Vinson", "Curran", 9));
+    students.push(makeStudent("laithcutler", "Laith", "Cutler", 9));
+    students.push(makeStudent("evanfrits", "Evan", "Frits", 9));
+    students.push(makeStudent("sophiahume", "Sophia", "Hume", 9));
+    students.push(makeStudent("emmafeng", "Emma", "Feng", 9));
+    students.push(makeStudent("abbykvart", "Abby", "Kvart", 9));
+    students.push(makeStudent("claudialandau", "Claudia", "Landau", 9));
+    students.push(makeStudent("lindenliu", "Linden", "Liu", 9));
+    students.push(makeStudent("alexmcclerybrown", "Alex", "Mccleery Brown", 9));
+    students.push(makeStudent("maxmilios", "Max", "Milios", 9));
+    students.push(makeStudent("sophiamyint", "Sophia", "Myint", 9));
+    students.push(makeStudent("alexolsen", "Alex", "Olsen", 9));
+    students.push(makeStudent("skyepratley", "Skye", "Pratley", 9));
+    students.push(makeStudent("narenselvam", "Naren", "Selvam", 9));
+    students.push(makeStudent("margaustanten", "Margau", "Staten-Lusty", 9));
+    students.push(makeStudent("nandiniyvelayudhandhamra", "Nandiniy", "VelayudhanDhamra", 9));
+    students.push(makeStudent("ryderveterane", "Ryder", "Veterane", 9));
+    students.push(makeStudent("isabelleyu", "Isabelle", "Yu", 9));
+    students.push(makeStudent("asherzamudio", "Asher", "Zamudio", 9));
+
+    //console.log(JSON.stringify(students));
+
+    function importStudents(theFile) {
+        console.log(theFile);
+        fetch(theFile)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                students = data;
+                renderList();
+            });
+
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const myParam = urlParams.get('myParam');
+    console.log(myParam);
+
+    importStudents('db/' + myParam + '.JSON');
+
+    function pickStudent() {
+        let randomStudentNum = Math.floor(Math.random() * students.length);
+        let student = students[randomStudentNum];
+
+        for (let i = 0; i < students.length; i++) {
+            students[i].picked = false;
+        }
+
+        students[randomStudentNum].picked = true;
+        renderList();
+    }
+
+    let pickButton = document.getElementById("pickStudent");
+    pickButton.addEventListener("click", pickStudent);
+
+    function renderList() {
+        students.sort(function(a, b) {
+            return a.clickcount - b.clickcount;
+        });
+
+        // students.sort(function(a,b){return a.lasttime-b.lasttime})
+
+        content = "";
+        let theStyle = "";
+        for (let i = 0; i < students.length; i++) {
+            if (students[i].picked) {
+                theStyle = 'class="student picked"';
+            } else {
+                theStyle = 'class="student"';
+            }
+            content += `<div ${theStyle} id="${students[i].username}">
+    ${students[i].first} ${students[i].last} ${students[i].clickcount}
+  </div>`;
+        }
+        let element = document.getElementById("container");
+        element.innerHTML = content;
+    }
+
+    renderList();
+
+    function listclick(e) {
+        for (let i = 0; i < students.length; i++) {
+            if (students[i].username == e.target.id) {
+                students[i].clickcount++;
+                students[i].lasttime = Date.now();
+            }
+        }
+        renderList();
+    }
+
+    let renderclick = document.getElementById("container");
+    renderclick.addEventListener("click", listclick);
+
+    function classChange() {
+        var x = document.getElementById("mySelect").value;
+        console.log(x)
+        importStudents(x)
+        //document.getElementById("demo").innerHTML = "You selected: " + x;
+    }
+    </script>
+</body>
+
+</html>
