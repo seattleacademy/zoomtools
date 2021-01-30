@@ -3,107 +3,81 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>C2103</title>
+    <title>2107 Seattle Academy Zoom Tools</title>
     <style>
     .center {
         width: 50%;
         margin: auto;
         display: block;
+        font-family: "Times New Roman", Times, serif;
+        font-size: 20px;
         margin-bottom: 20px;
-        background: lightblue;
+        background-color: rgb(33,96,120);
+        color: rgb(215,236,244);
     }
 
     .student {
-        border-style: groove;
-        text-align: center;
-        width: 50%;
+        text-align:center;
+        border: solid;
+        border-width: 3px;
+        background-color: rgb(33,96,120);
+        color: rgb(215,236,244);
         margin: auto;
+        width: 40%;
     }
-
+    
     .picked {
-        background: green;
+        background: violet;
     }
     </style>
 </head>
 
-<body translate="no">
+<body>
     <select id="mySelect" onchange="classChange()">
-        <option value="block6.JSON">Block 6
-        <option value="block1.JSON">Block 1
-        <option value="block3.JSON">Block 3
-        <option value="Volvo">Volvo
+        <option value="block1">Block 1
+        <option value="block5">Block 5
     </select>
+    <button id="updateButton" class='center'>
+        Update Button
+    </button>
     <button id="pickStudent" class='center'>
         Pick Student
     </button>
     <div id="container">
         ...
     </div>
-    <script id="rendered-js">
+    <script>
     console.clear();
-
+    let course = 'block1';
+    let port = 1500;
     let students = [];
 
-    function makeStudent(username, first, last, gradeLevel) {
-        const student = {};
-        student.username = username;
-        student.first = first;
-        student.last = last;
-        student.gradeLevel = gradeLevel;
-        student.clickcount = 0;
-        student.lasttime = Date.now();
-        student.picked = false;
-        return student;
-    }
-
-    students.push(makeStudent("brodybryant", "Brody", "Bryant", 9));
-    students.push(makeStudent("sophiacheuk", "Sofia", "Cheuk", 9));
-    students.push(makeStudent("natecounts", "Nate", "Counts", 9));
-    students.push(makeStudent("vinsoncurran", "Vinson", "Curran", 9));
-    students.push(makeStudent("laithcutler", "Laith", "Cutler", 9));
-    students.push(makeStudent("evanfrits", "Evan", "Frits", 9));
-    students.push(makeStudent("sophiahume", "Sophia", "Hume", 9));
-    students.push(makeStudent("emmafeng", "Emma", "Feng", 9));
-    students.push(makeStudent("abbykvart", "Abby", "Kvart", 9));
-    students.push(makeStudent("claudialandau", "Claudia", "Landau", 9));
-    students.push(makeStudent("lindenliu", "Linden", "Liu", 9));
-    students.push(makeStudent("alexmcclerybrown", "Alex", "Mccleery Brown", 9));
-    students.push(makeStudent("maxmilios", "Max", "Milios", 9));
-    students.push(makeStudent("sophiamyint", "Sophia", "Myint", 9));
-    students.push(makeStudent("alexolsen", "Alex", "Olsen", 9));
-    students.push(makeStudent("skyepratley", "Skye", "Pratley", 9));
-    students.push(makeStudent("narenselvam", "Naren", "Selvam", 9));
-    students.push(makeStudent("margaustanten", "Margau", "Staten-Lusty", 9));
-    students.push(makeStudent("nandiniyvelayudhandhamra", "Nandiniy", "VelayudhanDhamra", 9));
-    students.push(makeStudent("ryderveterane", "Ryder", "Veterane", 9));
-    students.push(makeStudent("isabelleyu", "Isabelle", "Yu", 9));
-    students.push(makeStudent("asherzamudio", "Asher", "Zamudio", 9));
-
-    //console.log(JSON.stringify(students));
-
     function importStudents(theFile) {
-        console.log(theFile);
         fetch(theFile)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 students = data;
                 renderList();
             });
 
     }
 
-    importStudents('db/garyanderson.JSON');
+    importStudents(`https://math.seattleacademy.org/${port}/${course}`);
+
 
     function pickStudent() {
         let randomStudentNum = Math.floor(Math.random() * students.length);
         let student = students[randomStudentNum];
 
         for (let i = 0; i < students.length; i++) {
-            students[i].picked = false;
+            if (students[i].picked) {
+                students[i].picked = false;
+                updateStudent(students[i]);
+            }
         }
 
         students[randomStudentNum].picked = true;
+        updateStudent(students[randomStudentNum]);
         renderList();
     }
 
@@ -112,7 +86,7 @@
 
     function renderList() {
         students.sort(function(a, b) {
-            return a.clickcount - b.clickcount;
+            return b.lasttime - a.lasttime;
         });
 
         // students.sort(function(a,b){return a.lasttime-b.lasttime})
@@ -125,8 +99,12 @@
             } else {
                 theStyle = 'class="student"';
             }
+            const lastTime = new Date(students[i].lasttime);
+
+            //console.log(lastTime.toLocaleTimeString('en-US'));
+            let timeString = lastTime.toLocaleTimeString('en-US')
             content += `<div ${theStyle} id="${students[i].username}">
-    ${students[i].first} ${students[i].last} ${students[i].clickcount}
+    ${students[i].clickcount} ${students[i].first} ${students[i].last} ${timeString}
   </div>`;
         }
         let element = document.getElementById("container");
@@ -140,6 +118,7 @@
             if (students[i].username == e.target.id) {
                 students[i].clickcount++;
                 students[i].lasttime = Date.now();
+                updateStudent(students[i]);
             }
         }
         renderList();
@@ -149,11 +128,38 @@
     renderclick.addEventListener("click", listclick);
 
     function classChange() {
-        var x = document.getElementById("mySelect").value;
-        console.log(x)
-        importStudents(x)
-        //document.getElementById("demo").innerHTML = "You selected: " + x;
+        course = document.getElementById("mySelect").value;
+        console.log(course);
+        importStudents(`https://math.seattleacademy.org/${port}/${course}`);
     }
+
+    function updateStudent(student) {
+        console.log(student);
+        const putMethod = {
+            method: 'PUT', // Method itself
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8' // Indicates the content 
+            },
+            body: JSON.stringify(student) // We send data in JSON format
+        }
+
+        // make the HTTP put request using fetch api
+        let url = `https://math.seattleacademy.org/${port}/${course}/`
+        url += student.username;
+        console.log(url);
+        fetch(url, putMethod)
+            .then(response => response.json())
+            .then(data => console.log(data)) // Manipulate the data retrieved back, if we want to do something with it
+            .catch(err => console.log(err)) // Do something with the error
+    }
+
+    function updateList() {
+        console.log('updateList')
+        importStudents(`https://math.seattleacademy.org/${port}/${course}`);
+    }
+    let updateButton = document.getElementById("updateButton");
+    updateButton.addEventListener("click", updateList); 
+    setInterval(updateList,1500);
     </script>
 </body>
 
